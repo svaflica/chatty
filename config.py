@@ -40,9 +40,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     # Минио
-    AWS_ACCESS_KEY: str = 'aaaa'
-    AWS_SECRET_KEY: str = 'bbbb'
+    MINIO_URL: str = 'minio:9000'
+    AWS_ACCESS_KEY: str = 'minioadmin'
+    AWS_SECRET_KEY: str = 'minioadmin'
     FILE_BUCKET_NAME: str = 'bucket'
+
+    AUTH_CLIENT_URL: str = ''
 
 
 settings = Settings()

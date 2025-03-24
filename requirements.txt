@@ -31,3 +31,5 @@ PyJWT
 starlette-exporter
 passlib
 python-multipart
+minio
+requests

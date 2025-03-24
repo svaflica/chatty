@@ -11,13 +11,14 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     email: Mapped[str] = mapped_column(String, index=True)
     password: Mapped[str] = mapped_column(String)
+    photo: Mapped[str] = mapped_column(String)
 
 
 class Post(Base):
     __tablename__ = "post"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    filename: Mapped[str] = mapped_column(String)
+    text: Mapped[str] = mapped_column(String(300))
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
 
 
@@ -27,7 +28,7 @@ class Comment(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     user_id: Mapped[str] = mapped_column(ForeignKey("user.id"), index=True, nullable=False)
     post_id: Mapped[str] = mapped_column(ForeignKey("post.id"), nullable=False)
-    text: Mapped[str] = mapped_column(String(300))
+    text: Mapped[str] = mapped_column(String(150))
 
 
 class Like(Base):

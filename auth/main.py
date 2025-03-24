@@ -19,6 +19,7 @@ from auth.schemas import (
     Token,
     TokenData,
     GetUserResult,
+    LoginUser,
 )
 from auth.minio_client import minio_client
 from config import settings
@@ -166,10 +167,10 @@ async def register(
 
 @app.post("/login")
 async def login_for_access_token(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    form_data: LoginUser,
     db: AsyncSession = Depends(get_db),
 ) -> Token:
-    user = await authenticate_user(db, form_data.username, form_data.password)
+    user = await authenticate_user(db, form_data.email, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

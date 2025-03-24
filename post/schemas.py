@@ -10,8 +10,6 @@ class Post(BaseModel):
 # Post with id
 class EditPost(Post):
     id: int
-    user_id: int
-    text: str
 
 
 class CommentPost(BaseModel):
@@ -20,8 +18,14 @@ class CommentPost(BaseModel):
     text: str
 
 
-class EditCommentPost(BaseModel):
+class EditCommentPost(CommentPost):
     id: int
+
+
+class Like(BaseModel):
     user_id: int
     post_id: int
-    text: str
+
+
+class RemoveLike(Like):
+    id: int

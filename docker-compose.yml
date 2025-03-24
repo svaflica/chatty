@@ -24,7 +24,6 @@ services:
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
-      MINIO_SCHEME: https
     command: server --console-address ":9001" /data
     networks:
       - net
@@ -35,6 +34,18 @@ services:
       - "8000:8000"
     depends_on:
       - db
+      - minio
+    networks:
+      - net
+
+  post:
+    image: post
+    ports:
+      - "8001:8001"
+    depends_on:
+      - db
+      - auth
+      - minio
     networks:
       - net
 
