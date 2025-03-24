@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=my_password
+      - POSTGRES_DB=db
+    volumes:
+      - postgres_data1:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"  # Проброс портов (внешний:внутренний)
+    networks:
+      - net
+
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./minio/data:/data
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_SCHEME: https
+    command: server --console-address ":9001" /data
+    networks:
+      - net
+
+  auth:
+    image: auth
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    networks:
+      - net
+
+volumes:
+  postgres_data1:
+  test-db-data:
+
+networks:
+  net:
+    driver: bridge
