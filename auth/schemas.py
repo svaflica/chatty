@@ -1,9 +1,13 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
+
+
+class GetUserResult(BaseModel):
+    email: str
+    photo: bytes | None = None
 
 
 # User
-class User(BaseModel):
-    email: str
+class User(GetUserResult):
     password: str
 
 

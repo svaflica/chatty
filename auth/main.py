@@ -18,7 +18,9 @@ from auth.schemas import (
     User,
     Token,
     TokenData,
+    GetUserResult,
 )
+from auth.minio_client import minio_client
 from config import settings
 
 
@@ -74,7 +76,7 @@ def create_access_token(data: dict, expires_delta: datetime.timedelta | None = N
 
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -102,15 +104,24 @@ async def get_current_active_user(
 ):
     if current_user is None:
         raise HTTPException(status_code=400, detail="Inactive user")
-    return TokenData(email=current_user.email)
+
+    photo: bytes = minio_client.get_object(current_user.photo)
+    return GetUserResult(email=current_user.email, photo=photo)
 
 
 async def register_user(
     db: AsyncSession,
     user: User,
 ):
-    user.password = get_password_hash(user.password)
-    db_item = models.User(**user.model_dump())
+    filename = None
+    if user.photo is not None:
+        filename = minio_client.put_object(user.photo)
+
+    db_item = models.User(
+        email = user.email,
+        password = get_password_hash(user.password),
+        photo = filename,
+    )
     db.add(db_item)
     await db.commit()
     await db.refresh(db_item)
@@ -148,7 +159,7 @@ async def register(
 
     access_token_expires = datetime.timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
+        data={"sub": user.email, "passwd": user.password}, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
 
@@ -172,9 +183,9 @@ async def login_for_access_token(
     return Token(access_token=access_token, token_type="bearer")
 
 
-@app.get("/users/me/", response_model=TokenData)
+@app.get("/users/me/", response_model=GetUserResult)
 async def read_users_me(
-    current_user: Annotated[TokenData, Depends(get_current_active_user)],
+    current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     return current_user
 
@@ -185,6 +196,7 @@ async def check_token(
     db: AsyncSession = Depends(get_db),
 ):
     await get_current_user(token, db)
+    return {"status": "ok"}
 
 
 @app.post("/new_password")
