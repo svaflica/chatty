@@ -19,15 +19,15 @@ class Post(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     text: Mapped[str] = mapped_column(String(300))
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete='CASCADE'))
 
 
 class Comment(Base):
     __tablename__ = "comment"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    user_id: Mapped[str] = mapped_column(ForeignKey("user.id"), index=True, nullable=False)
-    post_id: Mapped[str] = mapped_column(ForeignKey("post.id"), nullable=False)
+    user_id: Mapped[str] = mapped_column(ForeignKey("user.id", ondelete='CASCADE'), index=True, nullable=False)
+    post_id: Mapped[str] = mapped_column(ForeignKey("post.id", ondelete='CASCADE'), nullable=False)
     text: Mapped[str] = mapped_column(String(150))
 
 
@@ -36,5 +36,5 @@ class Like(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
-    user_id: Mapped[str] = mapped_column(ForeignKey("user.id"), index=True, nullable=False)
-    post_id: Mapped[str] = mapped_column(ForeignKey("post.id"), nullable=False)
+    user_id: Mapped[str] = mapped_column(ForeignKey("user.id", ondelete='CASCADE'), index=True, nullable=False)
+    post_id: Mapped[str] = mapped_column(ForeignKey("post.id", ondelete='CASCADE'), nullable=False)

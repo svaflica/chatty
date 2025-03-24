@@ -1,8 +1,5 @@
-import datetime
 from typing import Annotated
-import jwt
-
-from fastapi import Depends, HTTPException, status, FastAPI, Header
+from fastapi import Depends, HTTPException, status, FastAPI, Header, Path
 from starlette_exporter import PrometheusMiddleware, handle_metrics
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -57,6 +54,18 @@ async def get_post(
     return items[0]
 
 
+@app.get('/post/get/{id}')
+async def get_post_method(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    id: int = Path(),
+    db: AsyncSession = Depends(get_db),
+):
+    auth_client.validate_token(token)
+
+    post = await get_post(db, id)
+    return post
+
+
 async def edit_post_user(
     db: AsyncSession,
     post: schemas.EditPost,
@@ -82,6 +91,28 @@ async def edit_post(
 
     await edit_post_user(db, post_data)
     return {"status": "post edited"}
+
+
+async def remove_post_user(
+    db: AsyncSession,
+    post_data: schemas.DeletePost,
+):
+    await db.execute(delete(models.Post).where(
+        models.Post.id == post_data.id
+    ))
+    await db.commit()
+
+
+@app.post('/post/remove')
+async def remove_post(
+    post_data: schemas.DeletePost,
+    token: Annotated[str, Depends(oauth2_scheme)],
+    db: AsyncSession = Depends(get_db),
+):
+    auth_client.validate_token(token)
+
+    await remove_post_user(db, post_data)
+    return {"status": "post removed"}
 
 
 async def comment_post_user(
@@ -118,6 +149,18 @@ async def get_comment(
         raise HTTPException(status_code=404, detail="Post not found")
     return items[0]
 
+
+@app.get('/post/comment/get/{id}')
+async def get_post_method(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    id: int = Path(),
+    db: AsyncSession = Depends(get_db),
+):
+    auth_client.validate_token(token)
+
+    post = await get_comment(db, id)
+    return post
+
 async def edit_comment_user(
     db: AsyncSession,
     comment: schemas.EditCommentPost,
@@ -145,6 +188,28 @@ async def edit_post(
     return {"status": "comment edited"}
 
 
+async def remove_comment_user(
+    db: AsyncSession,
+    comment_data: schemas.DeleteCommentPost,
+):
+    await db.execute(delete(models.Comment).where(
+        models.Comment.id == comment_data.id
+    ))
+    await db.commit()
+
+
+@app.post('/post/comment/remove')
+async def remove_comment_post(
+    comment_data: schemas.DeleteCommentPost,
+    token: Annotated[str, Depends(oauth2_scheme)],
+    db: AsyncSession = Depends(get_db),
+):
+    auth_client.validate_token(token)
+
+    await remove_comment_user(db, comment_data)
+    return {"status": "comment removed"}
+
+
 async def like_post_user(
     db: AsyncSession,
     like_data: schemas.Like,
@@ -167,30 +232,14 @@ async def like_post(
     return {"status": "like posted"}
 
 
-async def get_like(
-    db: AsyncSession,
-    id: int,
-):
-    result = await db.execute(select(models.Like).where(
-        models.Like.id == id
-    ))
-    items = result.scalars().all()
-    if not items:
-        raise HTTPException(status_code=404, detail="Post not found")
-    return items[0]
-
-
 async def remove_like_user(
     db: AsyncSession,
     like: schemas.Like,
 ):
-    db_item = await get_like(db, like.id)
-
     await db.execute(delete(models.Like).where(
-        models.Like.id == id
+        models.Like.user_id == like.user_id and models.Like.post_id == like.post_id
     ))
     await db.commit()
-    await db.refresh(db_item)
 
 
 @app.post('/post/like/remove')
