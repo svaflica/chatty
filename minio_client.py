@@ -17,8 +17,11 @@ class MinioClient:
         )
         self.bucket = bucket
 
-        if not self.client.bucket_exists(self.bucket):
-            self.client.make_bucket(self.bucket)
+        try:
+            if not self.client.bucket_exists(self.bucket):
+                self.client.make_bucket(self.bucket)
+        except Exception as e:
+            pass
 
     def put_object(self, file: bytes):
         img_recovered = base64.b64decode(file)
