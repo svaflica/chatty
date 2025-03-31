@@ -16,6 +16,11 @@ class User(GetUserResult):
     password: str
 
 
+class UserChangePassword(BaseModel):
+    email: str
+    password: str
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str

@@ -2,12 +2,13 @@ import datetime
 from typing import Annotated
 import jwt
 
-from fastapi import Depends, HTTPException, status, FastAPI, Header
+from fastapi import Depends, HTTPException, status, FastAPI
 from fastapi.security import HTTPBasic
 from starlette_exporter import PrometheusMiddleware, handle_metrics
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
+from passlib.hash import bcrypt
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -19,10 +20,10 @@ from auth.schemas import (
     Token,
     TokenData,
     GetUserResult,
-    LoginUser,
+    LoginUser, UserChangePassword,
 )
-from auth.minio_client import minio_client
 from config import settings
+from minio_client import get_minio_client, MinioClient
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -34,7 +35,6 @@ app = FastAPI()
 
 app.add_middleware(PrometheusMiddleware, prefix='chatty')
 app.add_route("/metrics", handle_metrics)
-
 
 
 def verify_password(plain_password, hashed_password):
@@ -55,8 +55,18 @@ async def get_user(db, email: str, password):
     return items[0]
 
 
+async def get_user_by_email(db, email: str):
+    result = await db.execute(select(models.User).where(
+        models.User.email == email
+    ))
+    items = result.scalars().all()
+    if not items:
+        raise HTTPException(status_code=404, detail="User not found")
+    return items[0]
+
+
 async def authenticate_user(db, email: str, password: str):
-    user = await get_user(db, email, password)
+    user = await get_user_by_email(db, email)
     if not user:
         return False
     if not verify_password(password, user.password):
@@ -102,6 +112,7 @@ async def get_current_user(
 
 async def get_current_active_user(
     current_user: Annotated[User, Depends(get_current_user)],
+    minio_client = Depends(get_minio_client),
 ):
     if current_user is None:
         raise HTTPException(status_code=400, detail="Inactive user")
@@ -113,6 +124,7 @@ async def get_current_active_user(
 async def register_user(
     db: AsyncSession,
     user: User,
+    minio_client: MinioClient,
 ):
     filename = None
     if user.photo is not None:
@@ -131,7 +143,7 @@ async def register_user(
 
 async def new_password_user(
     db: AsyncSession,
-    user: User,
+    user: UserChangePassword,
 ):
     db_item = await get_user(db, user.email, user.password)
 
@@ -148,8 +160,9 @@ async def new_password_user(
 async def register(
     form_data: User,
     db: AsyncSession = Depends(get_db),
+    minio_client = Depends(get_minio_client),
 ):
-    user = await register_user(db, form_data)
+    user = await register_user(db, form_data, minio_client)
 
     if not user:
         raise HTTPException(
@@ -202,7 +215,7 @@ async def check_token(
 
 @app.post("/new_password")
 async def new_password(
-    form_data: User,
+    form_data: UserChangePassword,
     db: AsyncSession = Depends(get_db),
 ):
     await new_password_user(db, form_data)

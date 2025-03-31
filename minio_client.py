@@ -38,9 +38,11 @@ class MinioClient:
         return base64.b64encode(obj.data).decode('utf-8')
 
 
-minio_client = MinioClient(
-    settings.MINIO_URL,
-    settings.AWS_ACCESS_KEY,
-    settings.AWS_SECRET_KEY,
-    settings.FILE_BUCKET_NAME,
-)
+def get_minio_client():
+    minio_client = MinioClient(
+        settings.MINIO_URL,
+        settings.AWS_ACCESS_KEY,
+        settings.AWS_SECRET_KEY,
+        settings.FILE_BUCKET_NAME,
+    )
+    yield minio_client
