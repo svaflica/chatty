@@ -23,8 +23,9 @@ class CommentPost(BaseModel):
     text: str
 
 
-class EditCommentPost(CommentPost):
+class EditCommentPost(BaseModel):
     id: int
+    text: str
 
 
 class DeleteCommentPost(BaseModel):

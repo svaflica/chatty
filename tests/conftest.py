@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 import auth
+from auth_client import get_auth_client
 from minio_client import MinioClient, get_minio_client
 from models import Base
 from database import get_db
@@ -88,7 +89,7 @@ async def auth_client(test_db, test_minio):
     auth_app.dependency_overrides[get_minio_client] = override_get_minio_client
 
     # Используем AsyncClient
-    async with AsyncClient(transport=ASGITransport(app=auth_app), base_url="http://auth") as client:
+    async with AsyncClient(transport=ASGITransport(app=auth_app), base_url="http://auth:8000") as client:
         yield client
 
 
@@ -98,8 +99,20 @@ async def post_client(test_db):
     def override_get_db():
         yield test_db
 
+    def override_get_minio_client():
+        yield test_minio
+
+    class MockAuthClient:
+        def validate_token(self, token):
+            return None
+
+    def override_get_auth_client():
+        yield MockAuthClient()
+
     post_app.dependency_overrides[get_db] = override_get_db
+    post_app.dependency_overrides[get_minio_client] = override_get_minio_client
+    post_app.dependency_overrides[get_auth_client] = override_get_auth_client
 
     # Используем AsyncClient
-    async with AsyncClient(transport=ASGITransport(app=post_app), base_url="http://post") as client:
+    async with AsyncClient(transport=ASGITransport(app=post_app), base_url="http://post:8000") as client:
         yield client

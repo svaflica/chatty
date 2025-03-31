@@ -19,4 +19,5 @@ class AuthClient:
         return None
 
 
-auth_client = AuthClient(settings.AUTH_CLIENT_URL)
+def get_auth_client():
+    yield AuthClient(settings.AUTH_CLIENT_URL)

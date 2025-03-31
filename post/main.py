@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 
 import models
-from auth_client import auth_client
 
+from auth_client import get_auth_client
 from database import get_db
 from post import schemas
 
@@ -33,6 +33,7 @@ async def create_post_user(
 async def create_post(
     post_data: schemas.Post,
     token: Annotated[str, Depends(oauth2_scheme)],
+    auth_client = Depends(get_auth_client),
     db: AsyncSession = Depends(get_db),
 ):
     auth_client.validate_token(token)
@@ -59,6 +60,7 @@ async def get_post_method(
     token: Annotated[str, Depends(oauth2_scheme)],
     id: int = Path(),
     db: AsyncSession = Depends(get_db),
+    auth_client = Depends(get_auth_client),
 ):
     auth_client.validate_token(token)
 
@@ -86,6 +88,7 @@ async def edit_post(
     post_data: schemas.EditPost,
     token: Annotated[str, Depends(oauth2_scheme)],
     db: AsyncSession = Depends(get_db),
+    auth_client = Depends(get_auth_client),
 ):
     auth_client.validate_token(token)
 
@@ -108,6 +111,7 @@ async def remove_post(
     post_data: schemas.DeletePost,
     token: Annotated[str, Depends(oauth2_scheme)],
     db: AsyncSession = Depends(get_db),
+    auth_client = Depends(get_auth_client),
 ):
     auth_client.validate_token(token)
 
@@ -130,6 +134,7 @@ async def comment_post(
     comment_data: schemas.CommentPost,
     token: Annotated[str, Depends(oauth2_scheme)],
     db: AsyncSession = Depends(get_db),
+    auth_client = Depends(get_auth_client),
 ):
     auth_client.validate_token(token)
 
@@ -155,6 +160,7 @@ async def get_post_method(
     token: Annotated[str, Depends(oauth2_scheme)],
     id: int = Path(),
     db: AsyncSession = Depends(get_db),
+    auth_client = Depends(get_auth_client),
 ):
     auth_client.validate_token(token)
 
@@ -181,6 +187,7 @@ async def edit_post(
     comment_data: schemas.EditCommentPost,
     token: Annotated[str, Depends(oauth2_scheme)],
     db: AsyncSession = Depends(get_db),
+    auth_client = Depends(get_auth_client),
 ):
     auth_client.validate_token(token)
 
@@ -203,6 +210,7 @@ async def remove_comment_post(
     comment_data: schemas.DeleteCommentPost,
     token: Annotated[str, Depends(oauth2_scheme)],
     db: AsyncSession = Depends(get_db),
+    auth_client = Depends(get_auth_client),
 ):
     auth_client.validate_token(token)
 
@@ -225,6 +233,7 @@ async def like_post(
     like_data: schemas.Like,
     token: Annotated[str, Depends(oauth2_scheme)],
     db: AsyncSession = Depends(get_db),
+    auth_client = Depends(get_auth_client),
 ):
     auth_client.validate_token(token)
 
@@ -247,6 +256,7 @@ async def remove_like_post(
     like_data: schemas.Like,
     token: Annotated[str, Depends(oauth2_scheme)],
     db: AsyncSession = Depends(get_db),
+    auth_client = Depends(get_auth_client),
 ):
     auth_client.validate_token(token)
 
