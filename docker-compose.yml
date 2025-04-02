@@ -28,13 +28,34 @@ services:
     networks:
       - net
 
+  rabbitmq:
+    image: rabbitmq:3.10.7-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=rmuser
+      - RABBITMQ_DEFAULT_PASS=rmpassword
+    ports:
+      - 5672:5672
+      - 15672:15672
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    networks:
+      - net
+
   auth:
     image: auth
     ports:
       - "8000:8000"
     depends_on:
-      - db
-      - minio
+      db:
+        condition: service_started
+      minio:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
     networks:
       - net
 

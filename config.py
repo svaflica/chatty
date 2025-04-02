@@ -34,6 +34,18 @@ class Settings(BaseSettings):
         """Construct the async database URL for asyncpg."""
         return self.database_url.replace("postgresql://", "postgresql+asyncpg://")
 
+    # PostgreSQL database settings
+    RABBIT_HOST: str = 'rabbitmq'
+    RABBIT_PORT: int = 5672
+    RABBIT_PROTOCOL: str = 'amqp'
+    RABBIT_USER: str = 'rmuser'
+    RABBIT_PASSWORD: str | None = None  # Password can be optional
+
+    @property
+    def async_rm_url(self) -> str:
+        """Construct the async database URL for asyncpg."""
+        return f'{self.RABBIT_PROTOCOL}://{self.RABBIT_USER}:{self.RABBIT_PASSWORD}@{self.RABBIT_HOST}:{self.RABBIT_PORT}'
+
     # Шифрование пароля
     SECRET_KEY: str = ''
     ALGORITHM: str = 'HS256'

@@ -6,9 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 
 import models
-from auth_client import auth_client
+from auth_client import get_auth_client, AuthClient
 
 from database import get_db
+from post_client import PostClient, get_post_client
 from subscription import schemas
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -34,6 +35,7 @@ async def create_subscription(
     subscr_data: schemas.Subscription,
     token: Annotated[str, Depends(oauth2_scheme)],
     db: AsyncSession = Depends(get_db),
+    auth_client: AuthClient = Depends(get_auth_client),
 ):
     auth_client.validate_token(token)
 
@@ -57,8 +59,40 @@ async def remove_subscr(
     subscr_data: schemas.Subscription,
     token: Annotated[str, Depends(oauth2_scheme)],
     db: AsyncSession = Depends(get_db),
+    auth_client: AuthClient = Depends(get_auth_client),
 ):
     auth_client.validate_token(token)
 
     await remove_subscr_user(db, subscr_data)
     return {"status": "subscription removed"}
+
+
+async def get_subscr_posts_user(
+    db: AsyncSession,
+    user_data: schemas.User,
+    post_client: PostClient,
+    token,
+):
+    result = await db.execute(select(models.Subscription).where(
+        models.Subscription.subscriber_id == user_data.id
+    ))
+    result = result.scalars().all()
+
+    posts = []
+    for res in result:
+        posts.extend(await post_client.get_posts(token, res.user_id))
+    return posts
+
+
+@app.post('/subscription/posts')
+async def get_subscr_posts(
+    subscr_data: schemas.User,
+    token: Annotated[str, Depends(oauth2_scheme)],
+    db: AsyncSession = Depends(get_db),
+    post_client: PostClient = Depends(get_post_client),
+    auth_client: AuthClient = Depends(get_auth_client),
+):
+    auth_client.validate_token(token)
+
+    posts = await get_subscr_posts_user(db, subscr_data, post_client, token)
+    return posts

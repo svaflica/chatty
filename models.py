@@ -1,9 +1,6 @@
-import datetime
-
-from sqlalchemy import Column, Integer, String, DateTime, Text, func
+from sqlalchemy import String
 from sqlalchemy.orm import declarative_base, Mapped, mapped_column
 from sqlalchemy import ForeignKey
-from sqlalchemy.sql import func
 
 
 Base = declarative_base()
@@ -24,9 +21,6 @@ class Post(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     text: Mapped[str] = mapped_column(String(300))
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete='CASCADE'))
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
 
 
 class Comment(Base):

@@ -28,3 +28,41 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     email: str | None = None
+
+
+class LoginUserRabbit(BaseModel):
+    message_id: str
+    email: str
+    password: str
+
+
+class GetUserResultRabbit(BaseModel):
+    message_id: str
+    email: str
+    photo: bytes | None = None
+
+
+# User
+class UserRabbit(GetUserResultRabbit):
+    password: str
+
+
+class UserChangePasswordRabbit(BaseModel):
+    message_id: str
+    email: str
+    password: str
+
+
+class TokenRabbit(BaseModel):
+    message_id: str
+    access_token: str
+    token_type: str
+
+
+class TokenDataRabbit(BaseModel):
+    message_id: str
+    email: str | None = None
+
+
+class CheckTokenRabbit(BaseModel):
+    message_id: str

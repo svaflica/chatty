@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-import auth
 from auth_client import get_auth_client
 from minio_client import MinioClient, get_minio_client
 from models import Base
