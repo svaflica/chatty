@@ -1,15 +1,28 @@
+import datetime
+
 from fastapi import Depends, HTTPException, status, FastAPI
 from faststream.rabbit.fastapi import RabbitRouter
+from typing import Annotated
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.schemas import (
     Token,
     UserRabbit,
     LoginUserRabbit,
     CheckTokenRabbit,
-    UserChangePasswordRabbit,
+    UserChangePasswordRabbit, User,
 )
-from auth.utils import *
+from auth.utils import (
+    register_user,
+    create_access_token,
+    authenticate_user,
+    get_current_active_user,
+    oauth2_scheme,
+    get_current_user,
+    new_password_user,
+)
 from config import settings
+from database import get_db
 from minio_client import get_minio_client
 
 
