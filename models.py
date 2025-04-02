@@ -44,5 +44,5 @@ class Subscription(Base):
     __tablename__ = "subscription"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    subscriber_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete='CASCADE'), nullable=False)
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete='CASCADE'), nullable=False)
+    subscriber_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete='CASCADE'), index=True, nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete='CASCADE'), index=True, nullable=False)

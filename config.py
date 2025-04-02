@@ -58,6 +58,7 @@ class Settings(BaseSettings):
     FILE_BUCKET_NAME: str = 'bucket'
 
     AUTH_CLIENT_URL: str = ''
+    POST_CLIENT_URL: str = ''
 
 
 settings = Settings()
