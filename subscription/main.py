@@ -69,12 +69,12 @@ async def remove_subscr(
 
 async def get_subscr_posts_user(
     db: AsyncSession,
-    user_data: schemas.User,
+    user_id: int,
     post_client: PostClient,
     token,
 ):
     result = await db.execute(select(models.Subscription).where(
-        models.Subscription.subscriber_id == user_data.id
+        models.Subscription.subscriber_id == user_id
     ))
     result = result.scalars().all()
 
@@ -84,15 +84,15 @@ async def get_subscr_posts_user(
     return posts
 
 
-@app.post('/subscription/posts')
+@app.get('/{user_id}/subscription/posts')
 async def get_subscr_posts(
-    subscr_data: schemas.User,
     token: Annotated[str, Depends(oauth2_scheme)],
+    user_id: int = Path(),
     db: AsyncSession = Depends(get_db),
     post_client: PostClient = Depends(get_post_client),
     auth_client: AuthClient = Depends(get_auth_client),
 ):
     auth_client.validate_token(token)
 
-    posts = await get_subscr_posts_user(db, subscr_data, post_client, token)
+    posts = await get_subscr_posts_user(db, user_id, post_client, token)
     return posts

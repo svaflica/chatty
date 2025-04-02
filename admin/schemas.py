@@ -11,3 +11,7 @@ class Post(BaseModel):
 
 class Comment(BaseModel):
     comment_id: int
+
+
+class Feedback(BaseModel):
+    text: str

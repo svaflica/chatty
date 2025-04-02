@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 
 import models
-from admin.schemas import User, Post, Comment
+from admin.schemas import User, Post, Comment, Feedback
 from auth_client import get_auth_client
 
 from database import get_db
@@ -169,8 +169,32 @@ async def verificate_comment(
     return {"status": f"comment {comment.comment_id} status changed"}
 
 
-@app.post('/stats')
-async def verificate_comment(
+async def post_feedback(
+    feedback: Feedback,
+    db: AsyncSession,
+):
+    db_item = models.Feedback(text=feedback.text, status="new")
+    db.add(db_item)
+    await db.commit()
+    await db.refresh(db_item)
+
+
+@app.post('/send-feedback')
+async def send_feedback(
+    feedback: Feedback,
+    token: Annotated[str, Depends(oauth2_scheme)],
+    auth_client = Depends(get_auth_client),
+    db: AsyncSession = Depends(get_db),
+):
+    auth_client.validate_token(token)
+
+    await post_feedback(feedback, db)
+
+    return {"status": f"feedback sent"}
+
+
+@app.get('/stats')
+async def get_stats(
     comment: Comment,
     token: Annotated[str, Depends(oauth2_scheme)],
     auth_client = Depends(get_auth_client),
