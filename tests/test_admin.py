@@ -4,8 +4,8 @@ import base64
 
 from sqlalchemy import select
 
-from auth.main import get_password_hash
-from models import User, Subscription, Post, Comment, Feedback, Complaint
+from auth.utils import get_password_hash
+from models import User, Post, Comment, Feedback, Complaint
 
 
 @pytest_asyncio.fixture

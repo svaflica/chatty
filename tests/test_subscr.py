@@ -4,7 +4,7 @@ import base64
 
 from sqlalchemy import select
 
-from auth.main import get_password_hash
+from auth.utils import get_password_hash
 from models import User, Subscription, Post
 
 

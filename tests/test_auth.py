@@ -2,7 +2,7 @@ import pytest
 import pytest_asyncio
 import base64
 
-from auth.main import get_password_hash
+from auth.utils import get_password_hash
 from models import User
 
 
