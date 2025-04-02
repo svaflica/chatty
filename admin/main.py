@@ -164,7 +164,7 @@ async def verificate_comment(
 ):
     auth_client.validate_token_admin(token)
 
-    await verificate_post_f(comment, db)
+    await verificate_comment_f(comment, db)
 
     return {"status": f"comment {comment.comment_id} status changed"}
 
@@ -217,7 +217,7 @@ async def send_complaint(
     return {"status": f"complaint sent"}
 
 
-@app.get('/stats')
+@app.get('/stats_complaint')
 async def get_stats(
     comment: Comment,
     token: Annotated[str, Depends(oauth2_scheme)],
