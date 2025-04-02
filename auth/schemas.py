@@ -8,7 +8,7 @@ class LoginUser(BaseModel):
 
 class GetUserResult(BaseModel):
     email: str
-    photo: bytes | None = None
+    photo: bytes
 
 
 # User
@@ -39,7 +39,7 @@ class LoginUserRabbit(BaseModel):
 class GetUserResultRabbit(BaseModel):
     message_id: str
     email: str
-    photo: bytes | None = None
+    photo: bytes
 
 
 # User

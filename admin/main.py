@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 
 import models
-from admin.schemas import User, Post, Comment, Feedback
+from admin.schemas import User, Post, Comment, Feedback, Complaint
 from auth_client import get_auth_client
 
 from database import get_db
@@ -191,6 +191,30 @@ async def send_feedback(
     await post_feedback(feedback, db)
 
     return {"status": f"feedback sent"}
+
+
+async def post_complaint(
+    complaint: Complaint,
+    db: AsyncSession,
+):
+    db_item = models.Complaint(text=complaint.text, user_id=complaint.user_id, status="new")
+    db.add(db_item)
+    await db.commit()
+    await db.refresh(db_item)
+
+
+@app.post('/send-complaint')
+async def send_complaint(
+    complaint: Complaint,
+    token: Annotated[str, Depends(oauth2_scheme)],
+    auth_client = Depends(get_auth_client),
+    db: AsyncSession = Depends(get_db),
+):
+    auth_client.validate_token(token)
+
+    await post_complaint(complaint, db)
+
+    return {"status": f"complaint sent"}
 
 
 @app.get('/stats')

@@ -15,3 +15,8 @@ class Comment(BaseModel):
 
 class Feedback(BaseModel):
     text: str
+
+
+class Complaint(BaseModel):
+    user_id: int
+    text: str
