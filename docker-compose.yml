@@ -64,9 +64,12 @@ services:
     ports:
       - "8001:8001"
     depends_on:
-      - db
-      - auth
-      - minio
+      db:
+        condition: service_started
+      minio:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
     networks:
       - net
 
@@ -75,8 +78,26 @@ services:
     ports:
       - "8002:8002"
     depends_on:
-      - db
-      - minio
+      db:
+        condition: service_started
+      minio:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - net
+
+  admin:
+    image: admin
+    ports:
+      - "8003:8003"
+    depends_on:
+      db:
+        condition: service_started
+      minio:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
     networks:
       - net
 

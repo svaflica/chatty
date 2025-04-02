@@ -80,7 +80,7 @@ async def authenticate_user(db, email: str, password: str):
     user = await get_user_by_email(db, email)
     if not user:
         return False
-    if not verify_password(password, user.password):
+    if user.blocked or not verify_password(password, user.password):
         return False
     return user
 
@@ -222,6 +222,22 @@ async def check_token(
 ):
     await get_current_user(token, db)
     return {"status": "ok"}
+
+
+@app.get("/check_token_admin")
+async def check_token_admin(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    db: AsyncSession = Depends(get_db),
+):
+    user = await get_current_user(token, db)
+    if user.is_admin:
+        return {"status": "ok"}
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User is not admin",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 
 @app.post("/new_password")

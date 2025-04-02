@@ -1,0 +1,19 @@
+FROM python:3.11-slim-bullseye
+
+USER root
+
+WORKDIR /opt/app/
+
+ENV HTTP_PORT=80
+ENV PROMETHEUS_MULTIPROC_DIR /tmp
+ENV METRICS_PORT=8000
+
+COPY requirements.txt /opt/app/requirements.txt
+
+RUN pip --no-cache-dir install -r requirements.txt
+
+COPY . /opt/app
+
+RUN chmod +x /opt/app/start_scripts/admin.sh
+
+ENTRYPOINT ["/opt/app/start_scripts/admin.sh"]
