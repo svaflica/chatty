@@ -2,6 +2,13 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, status, FastAPI
 from starlette_exporter import PrometheusMiddleware, handle_metrics
 from sqlalchemy.ext.asyncio import AsyncSession
+from faststream.rabbit import (
+    ExchangeType,
+    RabbitBroker,
+    RabbitExchange,
+    RabbitQueue,
+)
+
 from admin.schemas import User, Post, Comment, Feedback, Complaint
 from auth_client import get_auth_client
 from database import get_db
@@ -16,6 +23,7 @@ from admin.utils import (
     get_stats_complaint_f,
     get_stats_feedback_f
 )
+from admin.rabbit import broker
 
 
 app = FastAPI()
@@ -121,7 +129,7 @@ async def get_stats_complaint(
 
 
 @app.get('/stats_feedback')
-async def get_stats_complaint(
+async def get_stats_feedback(
     token: Annotated[str, Depends(oauth2_scheme)],
     auth_client = Depends(get_auth_client),
     db: AsyncSession = Depends(get_db),
@@ -130,3 +138,16 @@ async def get_stats_complaint(
 
     result = await get_stats_feedback_f(db)
     return result
+
+
+@broker.after_startup
+async def startup(app: FastAPI):
+    await broker.broker.declare_queue(
+        RabbitQueue(
+            name="event-admin-result",
+            durable=False,
+        )
+    )
+
+
+app.include_router(broker)

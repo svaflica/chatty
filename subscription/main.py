@@ -2,11 +2,18 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, status, FastAPI, Header, Path
 from starlette_exporter import PrometheusMiddleware, handle_metrics
 from sqlalchemy.ext.asyncio import AsyncSession
-from auth_client import get_auth_client, AuthClient
+from faststream.rabbit import (
+    ExchangeType,
+    RabbitBroker,
+    RabbitExchange,
+    RabbitQueue,
+)
 
+from auth_client import get_auth_client, AuthClient
 from database import get_db
 from post_client import PostClient, get_post_client
 from subscription import schemas
+from subscription.rabbit import broker
 from subscription.utils import (
     oauth2_scheme,
     create_subscription_user,
@@ -71,5 +78,18 @@ async def get_recommendation(
 ):
     auth_client.validate_token(token)
 
-    posts = await get_recommendation_user(user_id, db)
-    return posts
+    users = await get_recommendation_user(user_id, db)
+    return users
+
+
+@broker.after_startup
+async def startup(app: FastAPI):
+    await broker.broker.declare_queue(
+        RabbitQueue(
+            name="event-subscr-result",
+            durable=False,
+        )
+    )
+
+
+app.include_router(broker)

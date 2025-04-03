@@ -130,3 +130,26 @@ async def get_stats_feedback_f(
 ):
     result = await db.execute(select(func.count()).select_from(models.Feedback))
     return {'feedback_count': result.scalar()}
+
+
+async def get_rabbit_message(
+    db: AsyncSession,
+    message_id: str,
+):
+    result = await db.execute(select(models.RabbitMessage).where(
+        models.RabbitMessage.message_id == message_id
+    ))
+    items = result.scalars().all()
+    if not items:
+        raise HTTPException(status_code=404, detail="RabbitMessage not found")
+    return items[0]
+
+
+async def remove_rabbit_message(
+    db: AsyncSession,
+    message_id: str,
+):
+    await db.execute(delete(models.RabbitMessage).where(
+        models.RabbitMessage.message_id == message_id
+    ))
+    await db.commit()

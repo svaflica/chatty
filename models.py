@@ -67,3 +67,11 @@ class Complaint(Base):
     text: Mapped[str] = mapped_column(String(300))
     status: Mapped[str] = mapped_column(String(10))
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete='CASCADE'), index=True, nullable=False)
+
+
+class RabbitMessage(Base):
+    __tablename__ = "rabbit_message"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    message_id: Mapped[str] = mapped_column(String)
+    text: Mapped[str] = mapped_column(String)

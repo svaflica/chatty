@@ -97,21 +97,45 @@ async def check_token_rabbit(
     db: AsyncSession = Depends(get_db),
 ):
     await get_current_user(token, db)
+
+    result_queue = 'event-auth-result'
+    if 'post' in msg.message_id:
+        result_queue += '-post'
+    elif 'subscr' in msg.message_id:
+        result_queue += '-subscr'
+
     await broker.broker.publish(
-        message={"status": "ok"},
-        queue='event-auth-result',
+        message={"status": "ok", "message_id": msg.message_id},
+        queue=result_queue,
         message_id=msg.message_id,
     )
 
 
-@broker.subscriber('event-auth', filter=lambda m: 'new-password' in m.message_id)
-async def new_password_rabbit(
-    form_data: UserChangePasswordRabbit,
+@broker.subscriber('event-auth', filter=lambda m: 'check-admin-token' in m.message_id)
+async def check_admin_token_rabbit(
+    msg: CheckTokenRabbit,
+    token: Annotated[str, Depends(oauth2_scheme)],
     db: AsyncSession = Depends(get_db),
 ):
-    await new_password_user(db, form_data)
-    await broker.broker.publish(
-        message={"status": "ok"},
-        queue='event-auth-result',
-        message_id=form_data.message_id,
-    )
+    user = await get_current_user(token, db)
+
+    result_queue = 'event-auth-result'
+    if 'post' in msg.message_id:
+        result_queue += '-post'
+    elif 'subscr' in msg.message_id:
+        result_queue += '-subscr'
+    elif 'admin' in msg.message_id:
+        result_queue += '-admin'
+
+    if user.is_admin:
+        await broker.broker.publish(
+            message={"status": "ok", "message_id": msg.message_id},
+            queue=result_queue,
+            message_id=msg.message_id,
+        )
+    else:
+        await broker.broker.publish(
+            message={"status": "error", "message_id": msg.message_id},
+            queue=result_queue,
+            message_id=msg.message_id,
+        )

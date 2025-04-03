@@ -95,6 +95,7 @@ async def get_comment(
         raise HTTPException(status_code=404, detail="Post not found")
     return items[0]
 
+
 async def edit_comment_user(
     db: AsyncSession,
     comment: schemas.EditCommentPost,
@@ -136,5 +137,28 @@ async def remove_like_user(
 ):
     await db.execute(delete(models.Like).where(
         models.Like.user_id == like.user_id and models.Like.post_id == like.post_id
+    ))
+    await db.commit()
+
+
+async def get_rabbit_message(
+    db: AsyncSession,
+    message_id: str,
+):
+    result = await db.execute(select(models.RabbitMessage).where(
+        models.RabbitMessage.message_id == message_id
+    ))
+    items = result.scalars().all()
+    if not items:
+        raise HTTPException(status_code=404, detail="RabbitMessage not found")
+    return items[0]
+
+
+async def remove_rabbit_message(
+    db: AsyncSession,
+    message_id: str,
+):
+    await db.execute(delete(models.RabbitMessage).where(
+        models.RabbitMessage.message_id == message_id
     ))
     await db.commit()

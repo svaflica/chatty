@@ -183,7 +183,7 @@ async def startup(app: FastAPI):
     await broker.broker.declare_queue(
         RabbitQueue(
             name="event-post-result",
-            durable=True,
+            durable=False,
         )
     )
 
