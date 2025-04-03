@@ -1,4 +1,6 @@
 import datetime
+import logging
+import sentry_sdk
 
 from fastapi import Depends, HTTPException, status, FastAPI
 from starlette_exporter import PrometheusMiddleware, handle_metrics
@@ -32,6 +34,8 @@ from auth.utils import (
 )
 from auth.rabbit import broker
 
+logger = logging.getLogger('logger_app')
+
 app = FastAPI()
 
 app.add_middleware(PrometheusMiddleware, prefix='chatty')
@@ -44,6 +48,7 @@ async def register(
     db: AsyncSession = Depends(get_db),
     minio_client = Depends(get_minio_client),
 ):
+    logger.info('Register started')
     user = await register_user(db, form_data, minio_client)
 
     if not user:
@@ -57,6 +62,7 @@ async def register(
     access_token = create_access_token(
         data={"sub": user.email, "passwd": user.password}, expires_delta=access_token_expires
     )
+    logger.info('Register ended')
     return Token(access_token=access_token, token_type="bearer")
 
 
@@ -65,6 +71,7 @@ async def login_for_access_token(
     form_data: LoginUser,
     db: AsyncSession = Depends(get_db),
 ) -> Token:
+    logger.info('Login started')
     user = await authenticate_user(db, form_data.email, form_data.password)
     if not user:
         raise HTTPException(
@@ -76,6 +83,7 @@ async def login_for_access_token(
     access_token = create_access_token(
         data={"sub": user.email, "passw": user.password}, expires_delta=access_token_expires
     )
+    logger.info('Login ended')
     return Token(access_token=access_token, token_type="bearer")
 
 
@@ -91,7 +99,9 @@ async def check_token(
     token: Annotated[str, Depends(oauth2_scheme)],
     db: AsyncSession = Depends(get_db),
 ):
+    logger.info('Check token started')
     await get_current_user(token, db)
+    logger.info('Check token ended')
     return {"status": "ok"}
 
 
@@ -100,8 +110,10 @@ async def check_token_admin(
     token: Annotated[str, Depends(oauth2_scheme)],
     db: AsyncSession = Depends(get_db),
 ):
+    logger.info('Check admin token started')
     user = await get_current_user(token, db)
     if user.is_admin:
+        logger.info('Check admin token ended')
         return {"status": "ok"}
     else:
         raise HTTPException(
@@ -116,7 +128,9 @@ async def new_password(
     form_data: UserChangePassword,
     db: AsyncSession = Depends(get_db),
 ):
+    logger.info('Changing password started')
     await new_password_user(db, form_data)
+    logger.info('Changing password ended')
     return {"status": "ok"}
 
 

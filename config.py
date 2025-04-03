@@ -1,3 +1,7 @@
+import logging
+import json
+import datetime
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -61,7 +65,77 @@ class Settings(BaseSettings):
     POST_CLIENT_URL: str = ''
 
 
+class FormatterLogger(logging.Formatter):
+    def format(self, record: logging.LogRecord):
+        _default_record_fields = dir(
+            logging.LogRecord(
+                '',
+                0,
+                '',
+                0,
+                None,
+                None,
+                None)
+        ) + ['__slotnames__']
+        extra = {x: record.__dict__[x] for x in dir(record) if x not in _default_record_fields}
+
+        rv = {
+            'msg': record.getMessage(),
+            'time': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            'logger_name': record.name,
+            'level': record.levelname,
+        }
+
+        if record.exc_info:
+            rv['exc_info'] = self.formatException(record.exc_info)
+
+        if "message" in extra and "arguments" in extra:
+            rv["msg"] = extra["message"].format(extra["arguments"])
+            del extra["message"]
+            del extra["arguments"]
+
+        return json.dumps(dict(**rv, **extra), ensure_ascii=False, default=repr)
+
+
 settings = Settings()
+
+
+# Set up logger
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(FormatterLogger())
+
+jrpc_logger = logging.getLogger("fastapi")
+# Turn off default log formatter
+jrpc_logger.propagate = False
+jrpc_logger.addHandler(stream_handler)
+
+logger = logging.getLogger("uvicorn")
+if len(logger.handlers) > 0:
+    logger.removeHandler(logger.handlers[0])
+logger.propagate = False
+logger.addHandler(stream_handler)
+
+logger = logging.getLogger("uvicorn.access")
+if len(logger.handlers) > 0:
+    logger.removeHandler(logger.handlers[0])
+logger.propagate = False
+logger.addHandler(stream_handler)
+
+logger = logging.getLogger("uvicorn.error")
+logger.propagate = False
+logger.addHandler(stream_handler)
+
+logger = logging.getLogger("uvicorn.asgi")
+logger.propagate = False
+logger.addHandler(stream_handler)
+
+# ...for our logger
+logger = logging.getLogger("logger_app")
+logger.setLevel(logging.INFO)
+# Turn off default log formatter
+logger.propagate = False
+logger.addHandler(stream_handler)
+
 
 if __name__ == '__main__':
     print(settings.model_dump())

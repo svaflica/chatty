@@ -1,3 +1,5 @@
+import logging
+
 from typing import Annotated
 from fastapi import Depends, HTTPException, status, FastAPI, Header, Path
 from starlette_exporter import PrometheusMiddleware, handle_metrics
@@ -22,6 +24,8 @@ from subscription.utils import (
     get_recommendation_user,
 )
 
+logger = logging.getLogger('logger_app')
+
 
 app = FastAPI()
 
@@ -36,9 +40,11 @@ async def create_subscription(
     db: AsyncSession = Depends(get_db),
     auth_client: AuthClient = Depends(get_auth_client),
 ):
+    logger.info('Creating subscription started')
     auth_client.validate_token(token)
 
     await create_subscription_user(subscr_data, db)
+    logger.info('Creating subscription ended')
     return {"status": "subscription added"}
 
 
@@ -49,9 +55,11 @@ async def remove_subscr(
     db: AsyncSession = Depends(get_db),
     auth_client: AuthClient = Depends(get_auth_client),
 ):
+    logger.info('Removing subscription started')
     auth_client.validate_token(token)
 
     await remove_subscr_user(db, subscr_data)
+    logger.info('Removing subscription ended')
     return {"status": "subscription removed"}
 
 
@@ -63,9 +71,11 @@ async def get_subscr_posts(
     post_client: PostClient = Depends(get_post_client),
     auth_client: AuthClient = Depends(get_auth_client),
 ):
+    logger.info('Getting subscriptions posts started')
     auth_client.validate_token(token)
 
     posts = await get_subscr_posts_user(db, user_id, post_client, token)
+    logger.info('Getting subscriptions posts ended')
     return posts
 
 
@@ -76,9 +86,11 @@ async def get_recommendation(
     db: AsyncSession = Depends(get_db),
     auth_client: AuthClient = Depends(get_auth_client),
 ):
+    logger.info('Getting recommendations started')
     auth_client.validate_token(token)
 
     users = await get_recommendation_user(user_id, db)
+    logger.info('Getting recommendations ended')
     return users
 
 

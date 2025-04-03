@@ -1,5 +1,6 @@
 import datetime
 import jwt
+import logging
 
 from fastapi import Depends, HTTPException, status, FastAPI
 from jwt.exceptions import InvalidTokenError
@@ -22,6 +23,7 @@ from auth.schemas import (
 from config import settings
 from minio_client import get_minio_client, MinioClient
 
+logger = logging.getLogger('logger_app')
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -105,10 +107,12 @@ async def get_current_active_user(
     current_user: Annotated[User, Depends(get_current_user)],
     minio_client = Depends(get_minio_client),
 ):
+    logger.info('Getting user info started')
     if current_user is None:
         raise HTTPException(status_code=400, detail="Inactive user")
 
     photo: bytes = minio_client.get_object(current_user.photo)
+    logger.info('Getting user info ended')
     return GetUserResult(email=current_user.email, photo=photo)
 
 
