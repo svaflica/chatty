@@ -8,7 +8,7 @@
 4. Создайте docker образ для сервиса admin ```docker build -t admin -f Dockerfile.admin .```
 5. Запустите docker compose ```docker compose up```
 
-## Запуск автотестов
+## Запуск автотестов (версия python 3.11)
 
 1. Создайте docker образ для сервиса auth ```docker build -t auth -f Dockerfile.auth .```
 2. Создайте docker образ для сервиса post ```docker build -t post -f Dockerfile.post .```
