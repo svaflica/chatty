@@ -1,6 +1,5 @@
 import datetime
 import logging
-import sentry_sdk
 
 from fastapi import Depends, HTTPException, status, FastAPI
 from starlette_exporter import PrometheusMiddleware, handle_metrics
